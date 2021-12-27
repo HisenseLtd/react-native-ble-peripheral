@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.Arrays;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.NativeModule;
@@ -144,10 +145,12 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
 
     @ReactMethod
     public void getConnectedDevices(Promise promise) {
-        Bundle b = new Bundle();
-        //TODO: mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
-//        b.putStringArray("connectedDevices", mBluetoothDevices.values().toArray(new String[mBluetoothDevices.size()]));
-        WritableMap map = getWritableMap(b);
+        List<BluetoothDevice> devices = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+        String[] devicesAddress = devices.stream().map(BluetoothDevice::getAddress).
+                   toArray(String[]::new);
+        
+       WritableMap map = Arguments.createMap();
+       map.putArray("connectedDevices", Arguments.fromArray(devicesAddress));
 
         promise.resolve(map);
     }
