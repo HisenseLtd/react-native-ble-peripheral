@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
@@ -60,12 +61,14 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     String name;
     boolean advertising;
     private Context context;
+    private HashMap<String, Callback> RNCallbacks;
 
     public RNBLEModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
         this.context = reactContext;
         this.servicesMap = new HashMap<String, BluetoothGattService>();
+        this.RNCallbacks = new HashMap<>();
         this.advertising = false;
         this.name = "RN_BLE";
     }
@@ -134,6 +137,22 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     }
 
     @ReactMethod
+    public void setCallbacks(Callback onConnectionStateChangeCallback, Callback onMessageCallback) {
+        this.RNCallbacks.put("onConnectionStateChange", onConnectionStateChangeCallback);
+        this.RNCallbacks.put("onMessage", onMessageCallback);
+    }
+
+    @ReactMethod
+    public void getConnectedDevices(Promise promise) {
+        Bundle b = new Bundle();
+        //TODO: mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+//        b.putStringArray("connectedDevices", mBluetoothDevices.values().toArray(new String[mBluetoothDevices.size()]));
+        WritableMap map = getWritableMap(b);
+
+        promise.resolve(map);
+    }
+
+    @ReactMethod
     public void sendNotifyMessage(String deviceStr, String serviceUUID, String readCharUUID, String message) {
         UUID SERVICE_UUID = UUID.fromString(serviceUUID);
         UUID CHAR_UUID = UUID.fromString(readCharUUID);
@@ -153,6 +172,13 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         }
     }
 
+    @ReactMethod
+    public void connectGatt(String deviceStr) {
+        BluetoothDevice device = mBluetoothDevices.get(deviceStr);
+
+        mGattServer.connect(device, false);
+    }
+
 
     private final BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
         @Override
@@ -169,13 +195,14 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
                 mBluetoothDevices.remove(device.toString());
             }
 
-            Bundle b = new Bundle();
-            b.putString("device", device.toString());
-            b.putString("status", getStatusDescription(status));
-            b.putString("newState",getStateDescription(newState));
-            WritableMap map = getWritableMap(b);
+           Bundle b = new Bundle();
+           b.putString("device", device.toString());
+           b.putString("status", getStatusDescription(status));
+           b.putString("newState",getStateDescription(newState));
+           WritableMap map = getWritableMap(b);
 
-            sendEvent(reactContext, "ConnectionStateChange", map);
+           sendEvent(reactContext, "ConnectionStateChange", map);
+            // RNCallbacks.get("onConnectionStateChange").invoke(device.toString(), getStatusDescription(status), getStateDescription(newState));
         }
 
         @Override
@@ -232,19 +259,21 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
 //                byte[] completeMessage = dataManager.getTheCompleteMesssage();
 //                dataManager.clear();
 
-            Bundle b = new Bundle();
-            b.putString("device", device.toString());
-            b.putInt("requestId", requestId);
-            b.putString("characteristic", characteristic.toString());
-            b.putBoolean("preparedWrite",preparedWrite);
-            b.putInt("offset",offset);
-            b.putString("value",new String(value, StandardCharsets.UTF_8));
+           Bundle b = new Bundle();
+           b.putString("device", device.toString());
+           b.putInt("requestId", requestId);
+           b.putString("characteristic", characteristic.toString());
+           b.putBoolean("preparedWrite",preparedWrite);
+           b.putInt("offset",offset);
+           b.putString("value",new String(value, StandardCharsets.UTF_8));
 //            b.putString("value",new String(completeMessage, StandardCharsets.UTF_8));
 
-                WritableMap map = getWritableMap(b);
+               WritableMap map = getWritableMap(b);
 
-                sendEvent(reactContext, "onMessage", map);
+               sendEvent(reactContext, "onMessage", map);
 //            }
+            // String message = new String(value, StandardCharsets.UTF_8);
+            // RNCallbacks.get("onMessage").invoke(device, requestId, characteristic, preparedWrite, offset, message);
         }
 
         @Override
