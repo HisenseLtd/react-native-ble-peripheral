@@ -1,5 +1,11 @@
-import { setOnConnectionStateChangeCallback, setOnMessageCallback} from './BLEPeripheralEventsHandler'
+import {
+  setOnConnectionStateChangeCallback,
+  setOnMessageCallback,
+} from './BLEPeripheralEventsHandler';
+import BLEPeripheral from './BLEPeripheral';
 
-var BLEPeripheral = require('./BLEPeripheral');
-
-module.exports = { BLEPeripheral, setOnConnectionStateChangeCallback, setOnMessageCallback};
+module.exports = {
+  BLEPeripheral,
+  setOnConnectionStateChangeCallback,
+  setOnMessageCallback,
+};

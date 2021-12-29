@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.NativeModule;
@@ -146,11 +147,16 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     @ReactMethod
     public void getConnectedDevices(Promise promise) {
         List<BluetoothDevice> devices = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
-        String[] devicesAddress = devices.stream().map(BluetoothDevice::getAddress).
-                   toArray(String[]::new);
+        List<String> devicesAddress = new ArrayList<String>();
+
+        for (BluetoothDevice device : devices) {
+            devicesAddress.add(device.getAddress());
+        }
         
        WritableMap map = Arguments.createMap();
-       map.putArray("connectedDevices", Arguments.fromArray(devicesAddress));
+       String[] arr = new String[devicesAddress.size()];
+       arr = devicesAddress.toArray(arr);
+       map.putArray("connectedDevices", Arguments.fromArray(arr));
 
         promise.resolve(map);
     }
@@ -215,8 +221,8 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
 
             Bundle b = new Bundle();
             b.putString("device", device.toString());
-            b.putInt("requestId", requestId);
-            b.putInt("offset",offset);
+            b.putString("requestId", Integer.toString(requestId));
+            b.putString("offset", Integer.toString(offset));
             b.putString("characteristic", characteristic.toString());
 
             WritableMap map = getWritableMap(b);
@@ -264,10 +270,10 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
 
            Bundle b = new Bundle();
            b.putString("device", device.toString());
-           b.putInt("requestId", requestId);
+           b.putString("requestId", Integer.toString(requestId));
            b.putString("characteristic", characteristic.toString());
-           b.putBoolean("preparedWrite",preparedWrite);
-           b.putInt("offset",offset);
+           b.putString("preparedWrite", Boolean.toString(preparedWrite));
+           b.putString("offset", Integer.toString(offset));
            b.putString("value",new String(value, StandardCharsets.UTF_8));
 //            b.putString("value",new String(completeMessage, StandardCharsets.UTF_8));
 
@@ -359,6 +365,11 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         if (mGattServer != null) {
             mGattServer.close();
         }
+        stopAdvertising();
+    }
+
+    @ReactMethod
+    public void stopAdvertising(){
         if (mBluetoothAdapter !=null && mBluetoothAdapter.isEnabled() && advertiser != null) {
             // If stopAdvertising() gets called before close() a null
             // pointer exception is raised.
@@ -366,6 +377,7 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         }
         advertising = false;
     }
+    
     @ReactMethod
     public void sendNotificationToDevices(String serviceUUID,String charUUID,ReadableArray message) {
         byte[] decoded = new byte[message.size()];
