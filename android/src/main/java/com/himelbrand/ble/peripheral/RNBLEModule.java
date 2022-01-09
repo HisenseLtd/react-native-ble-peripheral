@@ -61,6 +61,7 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     BluetoothLeAdvertiser advertiser;
     AdvertiseCallback advertisingCallback;
     String name;
+    String prevName;
     boolean advertising;
     private Context context;
     private HashMap<String, Callback> RNCallbacks;
@@ -73,6 +74,7 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         this.RNCallbacks = new HashMap<>();
         this.advertising = false;
         this.name = "RN_BLE";
+        this.prevName = "RN_BLE";
     }
 
     protected void sendEvent(ReactContext reactContext,
@@ -311,13 +313,17 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     };
 
     @ReactMethod
-    public void start(final Promise promise){
+    public void start(){
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
-        mBluetoothAdapter.setName(this.name);
         // Ensures Bluetooth is available on the device and it is enabled. If not,
 // displays a dialog requesting user permission to enable Bluetooth.
+    }
 
+    @ReactMethod
+    public void startAdvertising(final Promise promise) {
+        this.prevName = mBluetoothAdapter.getName();
+        mBluetoothAdapter.setName(this.name);
         mBluetoothDevices = new HashMap<>();
         mGattServer = mBluetoothManager.openGattServer(reactContext, mGattServerCallback);
         for (BluetoothGattService service : this.servicesMap.values()) {
@@ -345,7 +351,6 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
                 super.onStartSuccess(settingsInEffect);
                 advertising = true;
                 promise.resolve("Success, Started Advertising");
-
             }
 
             @Override
@@ -354,6 +359,7 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
                 Log.e("RNBLEModule", "Advertising onStartFailure: " + errorCode);
                 promise.reject("Advertising onStartFailure: " + errorCode);
                 super.onStartFailure(errorCode);
+                mBluetoothAdapter.setName(prevName);
             }
         };
 
@@ -374,6 +380,8 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
             // If stopAdvertising() gets called before close() a null
             // pointer exception is raised.
             advertiser.stopAdvertising(advertisingCallback);
+                mBluetoothAdapter.setName(this.prevName);
+            
         }
         advertising = false;
     }
