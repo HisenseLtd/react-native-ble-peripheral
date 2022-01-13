@@ -169,6 +169,10 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         UUID CHAR_UUID = UUID.fromString(readCharUUID);
 
         BluetoothDevice device = mBluetoothDevices.get(deviceStr);
+        if (device == null) {
+            Log.i("RNBLEModule", "sendNotifyMessage failure, device is null");
+            return;
+        }
 
         BluetoothGattCharacteristic readCharacteristic = mGattServer.getService(SERVICE_UUID)
                 .getCharacteristic(CHAR_UUID);
@@ -186,6 +190,10 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     @ReactMethod
     public void connectGatt(String deviceStr) {
         BluetoothDevice device = mBluetoothDevices.get(deviceStr);
+        if (device == null) {
+            Log.i("RNBLEModule", "connectGatt Failed, device is null");
+            return;
+        }
 
         mGattServer.connect(device, false);
     }
@@ -343,7 +351,6 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
             dataBuilder.addServiceUuid(new ParcelUuid(service.getUuid()));
         }
         AdvertiseData data = dataBuilder.build();
-        Log.i("RNBLEModule", data.toString());
 
         advertisingCallback = new AdvertiseCallback() {
             @Override
