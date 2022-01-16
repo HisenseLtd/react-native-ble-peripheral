@@ -1,9 +1,12 @@
-var { DeviceEventEmitter } = require('react-native');
+import BLEPeripheral from './BLEPeripheral';
+var { NativeEventEmitter } = require('react-native');
+
+const eventEmitter = new NativeEventEmitter(BLEPeripheral);
 
 export function setOnMessageCallback(cb) {
-  DeviceEventEmitter.addListener('onMessage', cb);
+  eventEmitter.addListener('onMessage', cb);
 }
 
 export function setOnConnectionStateChangeCallback(cb) {
-  DeviceEventEmitter.addListener('ConnectionStateChange', cb);
+  eventEmitter.addListener('ConnectionStateChange', cb);
 }
