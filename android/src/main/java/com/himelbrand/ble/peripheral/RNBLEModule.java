@@ -202,6 +202,18 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         mGattServer.connect(device, false);
     }
 
+    @ReactMethod
+    public void disconnectGatt(String deviceStr){
+        BluetoothDevice device = mBluetoothDevices.get(deviceStr);
+        if (device == null) {
+            Log.i("RNBLEModule", "disconnectGatt Failed, device is null");
+            return;
+        }
+
+        mGattServer.cancelConnection(device);
+        mBluetoothDevices.remove(deviceStr);
+    }
+
 
     private final BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
         @Override
