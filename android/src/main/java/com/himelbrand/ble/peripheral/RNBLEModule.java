@@ -150,17 +150,21 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     public void getConnectedDevices(Promise promise) {
         List<BluetoothDevice> devices = mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
         List<String> devicesAddress = new ArrayList<String>();
-
+        Log.i("Arye", "getConnectedDevices: " + devices);
         for (BluetoothDevice device : devices) {
             devicesAddress.add(device.getAddress());
+            Log.i("Arye", "getConnectedDevices: device: " + device.getAddress());
+
         }
-        
-       WritableMap map = Arguments.createMap();
+
+        WritableMap map = Arguments.createMap();
        String[] arr = new String[devicesAddress.size()];
        arr = devicesAddress.toArray(arr);
-       map.putArray("connectedDevices", Arguments.fromArray(arr));
+        Log.i("Arye", "getConnectedDevices: arr: " + Arrays.toString(arr));
 
-        promise.resolve(map);
+        map.putArray("connectedDevices", Arguments.fromArray(arr));
+
+       promise.resolve(map);
     }
 
     @ReactMethod
@@ -325,7 +329,8 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         // Ensures Bluetooth is available on the device and it is enabled. If not,
-// displays a dialog requesting user permission to enable Bluetooth.
+        // displays a dialog requesting user permission to enable Bluetooth.
+        mGattServer = mBluetoothManager.openGattServer(reactContext, mGattServerCallback);
     }
 
     @ReactMethod
@@ -333,7 +338,6 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         this.prevName = mBluetoothAdapter.getName();
         mBluetoothAdapter.setName(this.name);
         mBluetoothDevices = new HashMap<>();
-        mGattServer = mBluetoothManager.openGattServer(reactContext, mGattServerCallback);
         for (BluetoothGattService service : this.servicesMap.values()) {
             mGattServer.addService(service);
         }
