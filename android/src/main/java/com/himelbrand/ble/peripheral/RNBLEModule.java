@@ -337,17 +337,23 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     };
 
     @ReactMethod
-    public void start(){
+    public void start(final Promise promise){
+        mBluetoothDevices = new HashMap<>();
+
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         // Ensures Bluetooth is available on the device and it is enabled. If not,
         // displays a dialog requesting user permission to enable Bluetooth.
         mGattServer = mBluetoothManager.openGattServer(reactContext, mGattServerCallback);
+        if (mGattServer == null) {
+            promise.reject("Failed to start BLE");
+        }
 
-        mBluetoothDevices = new HashMap<>();
         for (BluetoothGattService service : this.servicesMap.values()) {
             mGattServer.addService(service);
         }
+
+        promise.resolve("BLE started");
     }
 
     @ReactMethod
