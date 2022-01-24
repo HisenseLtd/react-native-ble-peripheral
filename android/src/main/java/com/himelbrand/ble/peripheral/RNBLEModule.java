@@ -336,6 +336,18 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
         }
     };
 
+    private void addServices() {
+        if (mGattServer == null) {
+            Log.i("RNBLEModule", "can't add services to null gatt server");
+            return;
+        }
+        for (BluetoothGattService service : this.servicesMap.values()) {
+            if (mGattServer.getService(service.getUuid()) == null) {
+                mGattServer.addService(service);
+            }
+        }
+    }
+
     @ReactMethod
     public void start(final Promise promise){
         mBluetoothDevices = new HashMap<>();
@@ -349,9 +361,7 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
             promise.reject("Failed to start BLE");
         }
 
-        for (BluetoothGattService service : this.servicesMap.values()) {
-            mGattServer.addService(service);
-        }
+        addServices();
 
         promise.resolve("BLE started");
     }
@@ -360,6 +370,8 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     public void startAdvertising(final Promise promise) {
         this.prevName = mBluetoothAdapter.getName();
         mBluetoothAdapter.setName(this.name);
+
+        addServices();
 
         advertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
@@ -411,7 +423,7 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
             // If stopAdvertising() gets called before close() a null
             // pointer exception is raised.
             advertiser.stopAdvertising(advertisingCallback);
-                mBluetoothAdapter.setName(this.prevName);
+            mBluetoothAdapter.setName(this.prevName);
             
         }
         advertising = false;
