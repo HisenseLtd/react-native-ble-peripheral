@@ -423,7 +423,7 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
             // If stopAdvertising() gets called before close() a null
             // pointer exception is raised.
             advertiser.stopAdvertising(advertisingCallback);
-            mBluetoothAdapter.setName(this.prevName);
+//            mBluetoothAdapter.setName(this.prevName);
             
         }
         advertising = false;
