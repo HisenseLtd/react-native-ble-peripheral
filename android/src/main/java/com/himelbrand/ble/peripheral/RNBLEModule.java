@@ -364,14 +364,11 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
 
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
-        // Ensures Bluetooth is available on the device and it is enabled. If not,
-        // displays a dialog requesting user permission to enable Bluetooth.
+
         mGattServer = mBluetoothManager.openGattServer(reactContext, mGattServerCallback);
         if (mGattServer == null) {
             promise.reject("Failed to start BLE");
         }
-
-        addServices();
 
         promise.resolve("BLE started");
     }
@@ -380,6 +377,10 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     public void startAdvertising(final Promise promise) {
         this.prevName = mBluetoothAdapter.getName();
         mBluetoothAdapter.setName(this.name);
+
+        if (mGattServer == null) {
+            mGattServer = mBluetoothManager.openGattServer(reactContext, mGattServerCallback);
+        }
 
         addServices();
 
@@ -421,10 +422,12 @@ public class RNBLEModule extends ReactContextBaseJavaModule{
     }
     @ReactMethod
     public void stop(){
+        stopAdvertising();
         if (mGattServer != null) {
+            mGattServer.clearServices();
             mGattServer.close();
         }
-        stopAdvertising();
+        mGattServer = null;
     }
 
     @ReactMethod
